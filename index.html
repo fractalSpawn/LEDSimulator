@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test App</title>
+    <style type="text/css">
+    html, body {
+        background: #222;
+        color: #FFF;
+    }
+    #ledArray {
+        margin: 20px;
+    }
+    #ledArray header {
+        margin-bottom: 20px;
+    }
+    #ledArray section {
+        margin-bottom: 20px;
+        padding: 0;
+    }
+    .led {
+        padding: 0;
+        margin: 0;
+        /*transition: 0.5s;*/
+        border-radius: 50%;
+        float:left;
+        font-size: 0.6rem;
+        color: #000;
+        text-align: center;
+    }
+    </style>
+    <script type="text/javascript" src="http://code.angularjs.org/1.4.5/angular.min.js"></script>
+    <script type="text/javascript" src="http://code.angularjs.org/1.4.5/angular-route.min.js"></script>
+    <script type="text/javascript" src="http://code.angularjs.org/1.4.5/angular-animate.min.js"></script>
+    <script type="text/javascript" src="src/js/app.js"></script>
+    <script type="text/javascript" src="src/js/apps/ledSimulator/module.js"></script>
+    <script type="text/javascript" src="src/js/apps/ledSimulator/controllers/ledArray.controller.js"></script>
+    <script type="text/javascript" src="src/js/apps/ledSimulator/directives/led.directive.js"></script>
+    <script type="text/javascript" src="src/js/apps/ledSimulator/services/ledArray.factory.js"></script>
+
+</head>
+<body ng-app="testing">
+
+    <div id="ledArray" ng-controller="ledArray as vm">
+        <header>
+            <button ng-click="vm.reset()">Reset</button> | 
+            <button ng-click="vm.removeColor('red')">Remove Red</button>
+            <button ng-click="vm.removeColor('green')">Remove Green</button>
+            <button ng-click="vm.removeColor('blue')">Remove Blue</button>
+            <button ng-click="vm.addColor('red',255)">Full Red</button>
+            <button ng-click="vm.addColor('green',255)">Full Green</button>
+            <button ng-click="vm.addColor('blue',255)">Full Blue</button>
+            <button ng-click="vm.rainbow()">Rainbow</button>
+            <button ng-click="vm.sine()">Sine</button>
+        </header>
+        <section style="width:{{vm.cols*vm.pixelSize}}px; height:{{vm.rows*vm.pixelSize}}px">
+            <led pixel-size="vm.pixelSize" red="led.red" green="led.green" blue="led.blue" ng-repeat="led in vm.leds"></led>
+        </section>
+        <footer>
+            <p>
+                S: <input type="number" ng-model="vm.params.s" ng-change="vm.sine()" step="0.01" />
+            </p>
+            <p>
+                <!-- RF: <input type="number" ng-model="vm.params.rf" ng-change="vm.sine()" step="0.01" /> -->
+                <!-- RP: <input type="number" ng-model="vm.params.rp" ng-change="vm.sine()" step="0.01" /> -->
+                <!-- RW: <input type="number" ng-model="vm.params.rw" ng-change="vm.sine()" step="0.01" /> -->
+                RFS: <input type="number" ng-model="vm.params.rfs" ng-change="vm.sine()" step="0.01" />
+                RPS: <input type="number" ng-model="vm.params.rps" ng-change="vm.sine()" step="0.01" />
+                RWS: <input type="number" ng-model="vm.params.rws" ng-change="vm.sine()" step="0.01" />
+            </p>
+            <p>
+                <!-- GF: <input type="number" ng-model="vm.params.bf" ng-change="vm.sine()" step="0.01" /> -->
+                <!-- GP: <input type="number" ng-model="vm.params.bp" ng-change="vm.sine()" step="0.01" /> -->
+                <!-- GW: <input type="number" ng-model="vm.params.bw" ng-change="vm.sine()" step="0.01" /> -->
+                GFS: <input type="number" ng-model="vm.params.bfs" ng-change="vm.sine()" step="0.01" />
+                GPS: <input type="number" ng-model="vm.params.bps" ng-change="vm.sine()" step="0.01" />
+                GWS: <input type="number" ng-model="vm.params.bws" ng-change="vm.sine()" step="0.01" />
+            </p>
+            <p>
+                <!-- BF: <input type="number" ng-model="vm.params.gp" ng-change="vm.sine()" step="0.01" /> -->
+                <!-- BP: <input type="number" ng-model="vm.params.gf" ng-change="vm.sine()" step="0.01" /> -->
+                <!-- BW: <input type="number" ng-model="vm.params.gw" ng-change="vm.sine()" step="0.01" /> -->
+                BFS: <input type="number" ng-model="vm.params.gfs" ng-change="vm.sine()" step="0.01" />
+                BPS: <input type="number" ng-model="vm.params.gps" ng-change="vm.sine()" step="0.01" />
+                BWS: <input type="number" ng-model="vm.params.gws" ng-change="vm.sine()" step="0.01" />
+            </p>
+        </footer>
+    </div>
+
+</body>
+</html>
