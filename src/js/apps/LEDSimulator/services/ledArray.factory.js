@@ -5,46 +5,67 @@
         .module('ledSimulator')
         .factory('ledArrayService', ledArrayService);
 
-    ledArrayService.$inject = ['$interval'];
+    ledArrayService.$inject = ['$rootScope', '$interval'];
 
     /* @ngInject */
-    function ledArrayService($interval) {
+    function ledArrayService($rootScope, $interval) {
         var leds = [];
         var timer = null;
-        var params = {
-            s: 0.18,
+        var dimensions = {w:20, h:20, p:20, co:1};
+        var colorToggles = {r:true, g:true, b:true};
+        var plasmaParams = {
+            a:0.5, s: 0.1, l: 0.63,
+            ph:5, f:0.01, w:100, wo:127,
             rf:0.31, gf:0.31, bf:0.31,
             rp:0.0, gp:0.0, bp:0.0,
             rw:127, gw:127, bw:127,
             rfs:0.25, rps:0.03, rws:0.3,
             gfs:-0.13, gps:0.07, gws:0.12,
-            bfs:0.09, bps:0.04, bws:0.24,
+            bfs:0.09, bps:0.04, bws:0.24
         };
-        var colors = [
-            {r:255, g:0, b:0}, {r:255, g:128, b:0}, {r:255, g:255, b:0}, {r:128, g:255, b:0},
-            {r:0, g:255, b:0}, {r:0, g:255, b:128}, {r:0, g:255, b:255}, {r:0, g:128, b:255},
-            {r:0, g:0, b:255}, {r:128, g:0, b:255}, {r:255, g:0, b:255}, {r:255, g:0, b:128}
-        ];
-
+        
         var service = {
-            rows: 1,
-            cols: 1,
-            params: params,
+            dimensions: dimensions,
+            plasmaParams: plasmaParams,
+            colorToggles: colorToggles,
             leds: leds,
             activateArray: activateArray,
+            adjustDimensions: adjustDimensions,
+            forEachLED: forEachLED,
+            forEachInCol: forEachInCol,
+            forEachInRow: forEachInRow,
             removeColor: removeColor,
             addColor: addColor,
+            cancelAnimation: cancelAnimation,
             randomize: randomize,
             rainbow: rainbow,
-            sine: sine
+            plasma: plasma
         };
         return service;
 
         ////////////////
         function activateArray(){
-            for(var a=0; a<service.rows*service.cols; a++){
-                leds.push({id:a, red:0, green:0, blue:0});
+            for(var a=0; a<dimensions.h*dimensions.w; a++){
+                leds.push({red:0, green:0, blue:0});
             }
+        }
+
+        function adjustDimensions(){
+            var area = dimensions.w*dimensions.h;
+            var diff = area - leds.length;
+            plasmaParams.a = (dimensions.co*10)/dimensions.w;
+
+            if(diff > 0){
+                while(leds.length < area){
+                    leds.push({red:0, green:0, blue:0});
+                }
+            }
+            else if(diff < 0){
+                while(leds.length > area){
+                    leds.shift();
+                }
+            }
+
         }
 
         function forEachLED(actions){
@@ -55,15 +76,15 @@
         }
 
         function forEachInCol(col, actions){
-            for(var a=0; a<service.rows; a++){
-                var led = leds[a*service.cols+col];
+            for(var a=0; a<dimensions.h; a++){
+                var led = leds[a*dimensions.w+col];
                 actions(led, a);
             }
         }
 
         function forEachInRow(row, actions){
-            for(var a=0; a<service.cols; a++){
-                var led = leds[a+service.cols*row];
+            for(var a=0; a<dimensions.w; a++){
+                var led = leds[a+dimensions.w*row];
                 actions(led, a);
             }
         }
@@ -82,6 +103,10 @@
             });
         }
 
+        function cancelAnimation(){
+            $interval.cancel(timer);
+        }
+
         function randomize(){
             $interval.cancel(timer);
             forEachLED(function(led){
@@ -93,49 +118,44 @@
 
         function rainbow(){
             $interval.cancel(timer);
-            var col = 0;
-            var dir = true;
-            var color = 0;
-            timer = $interval(function(){
-                forEachInCol(col, function(led){
-                    led.red = colors[color].r;
-                    led.green = colors[color].g;
-                    led.blue = colors[color].b;
-                });
-
-                col = dir ? col+1 : col-1;
-                if(col == service.cols){
-                    col = 0;
-                    color++;
-                }
-                if(color == colors.length) color = 0;
-            },10);
-        }
-
-        function sine(){
-            $interval.cancel(timer);
             var t = 0;
             timer = $interval(function(){
                 forEachLED(function(led, a){
-                    led.red = Math.round(Math.sin(params.rf*a+params.rp)*128 + params.rw);
-                    led.green = Math.round(Math.sin(params.gf*a+params.gp)*128 + params.gw);
-                    led.blue = Math.round(Math.sin(params.bf*a+params.bp)*128 + params.bw);
+                    led.red = Math.round(Math.cos(t*0.01)*128 + 127);
+                    led.green = Math.round(Math.cos(t*0.01+(Math.PI/2))*128 + 127);
+                    led.blue = Math.round(Math.cos(t*0.01+Math.PI)*128 + 127);
                 });
                 t++;
+            },10);
+        }
 
-                params.rf = Math.sin((params.rfs*params.s)*t)*0.01 + 0.31;
-                params.rp = Math.sin((params.rps*params.s)*t)*5;
-                params.rw = Math.sin((params.rws*params.s)*t)*100 + 127;
+        function plasma(){
+            $interval.cancel(timer);
+            var t = 0;
+            timer = $interval(function(){
+                // modulate sine frequency, phasing and widths for each color
+                plasmaParams.rf = Math.cos(t*(plasmaParams.rfs*plasmaParams.s))*plasmaParams.f + plasmaParams.l;
+                plasmaParams.rp = Math.cos(t*(plasmaParams.rps*plasmaParams.s))*plasmaParams.ph;
+                plasmaParams.rw = Math.cos(t*(plasmaParams.rws*plasmaParams.s))*plasmaParams.w + plasmaParams.wo;
 
-                params.gf = Math.sin((params.gfs*params.s)*t)*0.01 + 0.31;
-                params.gp = Math.sin((params.gps*params.s)*t)*5;
-                params.gw = Math.sin((params.gws*params.s)*t)*100 + 127;
+                plasmaParams.gf = Math.cos(t*(plasmaParams.gfs*plasmaParams.s))*plasmaParams.f + plasmaParams.l;
+                plasmaParams.gp = Math.cos(t*(plasmaParams.gps*plasmaParams.s))*plasmaParams.ph;
+                plasmaParams.gw = Math.cos(t*(plasmaParams.gws*plasmaParams.s))*plasmaParams.w + plasmaParams.wo;
 
-                params.bf = Math.sin((params.bfs*params.s)*t)*0.01 + 0.31;
-                params.bp = Math.sin((params.bps*params.s)*t)*5;
-                params.bw = Math.sin((params.bws*params.s)*t)*100 + 127;
+                plasmaParams.bf = Math.cos(t*(plasmaParams.bfs*plasmaParams.s))*plasmaParams.f + plasmaParams.l;
+                plasmaParams.bp = Math.cos(t*(plasmaParams.bps*plasmaParams.s))*plasmaParams.ph+10;
+                plasmaParams.bw = Math.cos(t*(plasmaParams.bws*plasmaParams.s))*plasmaParams.w + plasmaParams.wo;
+
+                forEachLED(function(led, a){
+                    // modulate color fade with sine (randomness from above calcs)
+                    a *= plasmaParams.a;
+                    led.red =   !colorToggles.r ? 0 : Math.round(Math.cos(a*plasmaParams.rf+plasmaParams.rp)*128 + plasmaParams.rw);
+                    led.green = !colorToggles.g ? 0 : Math.round(Math.cos(a*plasmaParams.gf+plasmaParams.gp)*128 + plasmaParams.gw);
+                    led.blue =  !colorToggles.b ? 0 : Math.round(Math.cos(a*plasmaParams.bf+plasmaParams.bp)*128 + plasmaParams.bw);
+                });
+                
+                t++;
             }, 10);
         }
-        
     }
 })();
