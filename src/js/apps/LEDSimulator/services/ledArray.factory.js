@@ -131,8 +131,8 @@
 
         function plasma(){
             $interval.cancel(timer);
-            var t = Math.round(Math.random()*1000);
             var d = true;
+            var t = Math.round(Math.random()*1000);
             timer = $interval(function(){
                 // modulate sine frequency, phasing and widths for each color
                 plasmaParams.rf = Math.cos(t*(plasmaParams.rfs*plasmaParams.s))*plasmaParams.f + plasmaParams.l;
@@ -158,7 +158,7 @@
                 // to prevent huge t values over time we make t go back down.
                 // going back down instead of jumping to 0 prevents an abrupt color change
                 t = d ? t+1 : t-1;
-                if(t==10000 || t===0) d = !d;
+                if(t==Math.random()*10000 || t===Math.random()*500) d = !d;
             }, 10);
         }
     }
